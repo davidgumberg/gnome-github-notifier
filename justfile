@@ -7,6 +7,8 @@ default: install
 install: pack
     gnome-extensions install build/${atuuid}.com.shell-extension.zip --force
 
+alias b := pack
+alias build := pack
 pack:
     mkdir -p build/
     gnome-extensions pack --schema schemas/org.gnome.shell.extensions.$dotuuid.gschema.xml -o build/ --force
