@@ -48,11 +48,11 @@ class DebugIndicator extends PanelMenu.Button {
 
         this.menu.addAction(_('Check for GH notifications'), () => {
             this.extension.pollGithub().catch(error => {
-                log('[EXTENSION_ERROR]', 'Error polling GitHub:', error);
+                console.warn(`[GITHUB_NOTIFIER_EXTENSION] Error polling GitHub: ${error}`);
             });
 
             this.extension.pollGithubIssues().catch(error => {
-                log('[EXTENSION_ERROR]', 'Error polling GitHub:', error);
+                console.warn(`[GITHUB_NOTIFIER_EXTENSION] Error polling GitHub: ${error}`);
             });
         })
 
@@ -85,11 +85,11 @@ export default class GithubNotifierExtension extends Extension {
 
         this._sourceId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this._pollInterval, () => {
             this.pollGithub().catch(error => {
-                log('[EXTENSION_ERROR]', 'Error polling GitHub:', error);
+                console.warn(`[GITHUB_NOTIFIER_EXTENSION] Error polling GitHub: ${error}`);
             });
 
             this.pollGithubIssues().catch(error => {
-                log('[EXTENSION_ERROR]', 'Error polling GitHub:', error);
+                console.warn(`[GITHUB_NOTIFIER_EXTENSION] Error polling GitHub: ${error}`);
             });
             return GLib.SOURCE_CONTINUE;
         });
@@ -110,7 +110,6 @@ export default class GithubNotifierExtension extends Extension {
         if (apiKey != '') {
           message.request_headers.append('Authorization', `Bearer ${this._apiKey}`);
         }
-        log('[GITHUB_NOTIFIER_EXTENSION]', 'API Key: ', apiKey)
         message.request_headers.append('X-GitHub-Api-Version', '2022-11-28');
         try {
             const bytes = await this._httpSession.send_and_read_async(
@@ -119,36 +118,30 @@ export default class GithubNotifierExtension extends Extension {
                 null
             );
 
-            log('[GITHUB_NOTIFIER_EXTENSION]', 'HTTP Status:', message.status_code);
-
             if (message.get_status() === Soup.Status.OK) {
                 const data = bytes.get_data();
-                log('[GITHUB_NOTIFIER_EXTENSION]', 'Received data length:', data.length);
 
                 let jsonData = JSON.parse(new TextDecoder().decode(data));
                 this._processEvents(jsonData);
-
-                log('[GITHUB_NOTIFIER_EXTENSION]', 'Processed events');
             } else {
-                log('[GITHUB_NOTIFIER_EXTENSION]', 'HTTP request failed with status:', message.status_code);
+                console.warn(`[GITHUB_NOTIFIER_EXTENSION] HTTP request failed with status: ${message.status_code}`);
             }
 
         } catch (error) {
-            log('[GITHUB_NOTIFIER_EXTENSION]', 'Error in pollGithub:', error);
+            console.error(`[GITHUB_NOTIFIER_EXTENSION] Error in pollGithub: ${error}`);
         }
     }
 
     async _processEvents(events) {
         for (let event of events) {
             if (event.id === this._lastEventID) {
-                log('[GITHUB_NOTIFIER_EXTENSION]', `Not adding notification with id ${event.id} since we already shewed it. `,
-                    `It was a: ${event.type} by ${event.actor.login}`);
+                console.debug(`[GITHUB_NOTIFIER_EXTENSION] Not adding notification with id ${event.id} since we already shewed it. It was a: ${event.type} by ${event.actor.login}`);
                 break;
             }
 
             let title, body, url;
 
-            log('[GITHUB_NOTIFIER_EXTENSION]', `Processing event type: ${event.type}`)
+            console.debug(`[GITHUB_NOTIFIER_EXTENSION] Processing event type: ${event.type}`)
             switch (event.type) {
                 case 'PushEvent':
                     title = `Commit by ${event.actor.login}`;
@@ -177,11 +170,9 @@ export default class GithubNotifierExtension extends Extension {
                     url = event.payload.comment.html_url;
                     break;
                 default:
-                    log('[GITHUB_NOTIFIER_EXTENSION]', `${event.type} not supported`);
+                    console.debug(`[GITHUB_NOTIFIER_EXTENSION] ${event.type} not supported`);
                     continue;
             }
-
-            log('[GITHUB_NOTIFIER_EXTENSION]', `Creating notification: title: ${title}, body: ${body}, url: ${url}`);
 
             this._createNotification(title, body, url);
             if (this._getNotificationSource().count === 3){
@@ -190,7 +181,6 @@ export default class GithubNotifierExtension extends Extension {
             }
         }
 
-        log('[GITHUB_NOTIFIER_EXTENSION]', `last seen id: ${this._lastEventID}`);
         if (events.length > 0) {
             this._lastEventID = events[0].id;
         }
@@ -212,36 +202,31 @@ export default class GithubNotifierExtension extends Extension {
                 null
             );
 
-            log('[GITHUB_NOTIFIER_EXTENSION]', 'HTTP Status:', message.status_code);
-
             if (message.status_code === Soup.Status.OK) {
                 const data = bytes.get_data();
-                log('[GITHUB_NOTIFIER_EXTENSION]', 'Received data length:', data.length);
 
                 let jsonData = JSON.parse(new TextDecoder().decode(data));
                 this._processIssueEvents(jsonData);
 
-                log('[GITHUB_NOTIFIER_EXTENSION]', 'Processed issue events');
             } else {
-                log('[GITHUB_NOTIFIER_EXTENSION]', 'HTTP request failed with status:', message.status_code);
+                console.warn(`[GITHUB_NOTIFIER_EXTENSION] HTTP request failed with status: ${message.status_code}`);
             }
 
         } catch (error) {
-            log('[GITHUB_NOTIFIER_EXTENSION]', 'Error in pollGithub:', error);
+            console.error(`[GITHUB_NOTIFIER_EXTENSION] Error in pollGithubIssues: ${error}`);
         }
     }
 
     async _processIssueEvents(events) {
-        log('[GITHUB_NOTIFIER_EXTENSION]', 'Processing issue event');
         for (let event of events) {
             if (event.id === this._lastIssueEventID) {
-                log('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since we already shewed it. `,
-                    `It was an issue: ${event.event} by ${event.actor.login}`);
+                console.debug(`[GITHUB_NOTIFIER_EXTENSION] Not adding issue notification with id ${event.id} since we already shewed it. It was an issue event: ${event.event} by ${event.actor.login}`);
                 break;
             }
 
             let title, body, url;
 
+            console.debug(`[GITHUB_NOTIFIER_EXTENSION] Processing issue event type: ${event.type}`)
             switch (event.event) {
                 case 'head_ref_force_pushed':
                     title = `${event.actor.login} force pushed PR #${event.issue.number}`;
@@ -253,13 +238,12 @@ export default class GithubNotifierExtension extends Extension {
                           existing_notification.body === body &&
                           existing_notification.url === url
                     })) {
-                        log('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since it is identical to an earlier one. `,
-                            `It was an issue: ${event.event} by ${event.actor.login}`);
+                        console.debug(`[GITHUB_NOTIFIER_EXTENSION] Not adding issue notification with id ${event.id} since it is identical to an earlier one. It was an issue event: ${event.event} by ${event.actor.login}`);
                         continue;
                     }
                     break;
                 default:
-                    log('[GITHUB_NOTIFIER_EXTENSION]', `Issue ${event.event} event not supported`);
+                    console.debug(`[GITHUB_NOTIFIER_EXTENSION] Issue ${event.event} event not supported`);
                     continue;
             }
 
@@ -277,23 +261,20 @@ export default class GithubNotifierExtension extends Extension {
 
     _createNotification(title, body, url) {
 
-    log('[GITHUB_NOTIFIER_EXTENSION]', `Creating notification with title ${title} and body ${body}`);
-
     let source = this._getNotificationSource(); // I don't understand why I can't just use this rvalue below
 
     let notification = new MessageTray.Notification({
-    source: source,
-    title: title,
-    body: body,
+        source: source,
+        title: title,
+        body: body,
     });
 
     if(url) {
         notification.connect('activated', _ => {
             try {
-                log(`[GITHUB_NOTIFIER_EXTENSION] launching browser`);
                 Gio.AppInfo.launch_default_for_uri(url, null);
             } catch (error) {
-                log(`[GITHUB_NOTIFIER_EXTENSION] Error launching browser: ${error}`);
+                console.error (`[GITHUB_NOTIFIER_EXTENSION] Error launching browser: ${error}`);
             }
         });
 
@@ -301,7 +282,7 @@ export default class GithubNotifierExtension extends Extension {
             try {
                 Gio.AppInfo.launch_default_for_uri(url, null);
             } catch (error) {
-                log(`[GITHUB_NOTIFIER_EXTENSION] Error launching browser: ${error}`);
+                console.error(`[GITHUB_NOTIFIER_EXTENSION] Error launching browser: ${error}`);
             }
         });
 
