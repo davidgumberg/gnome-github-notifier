@@ -2,6 +2,8 @@ set export
 atuuid := "githubnotifier@davidgumberg"
 dotuuid := replace(atuuid, "@", ".")
 
+default: install
+
 install: pack
     gnome-extensions install build/${atuuid}.com.shell-extension.zip --force
 
