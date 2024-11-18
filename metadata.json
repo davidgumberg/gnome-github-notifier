@@ -1,6 +1,7 @@
 {
-  "name": "Git notifier",
-  "description": "Makes it git up",
+  "name": "Github notifier",
+  "description": "Get notifications for a github repository",
+  "url": "https://github.com/davidgumberg/gnome-github-notifier",
   "uuid": "githubnotifier@davidgumberg.com",
   "shell-version": [
     "46"
