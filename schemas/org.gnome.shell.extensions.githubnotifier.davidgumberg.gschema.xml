@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.githubnotifier.davidgumberg" path="/org/gnome/shell/extensions/githubnotifier/davidgumberg/">
+    <key name="github-token" type="s">
+      <default>""</default>
+      <summary>Github API Token</summary>
+      <description>PAT to use when making requests</description>
+    </key>
+    <key name="github-repo" type="s">
+      <default>"bitcoin/bitcoin"</default>
+      <summary>The "owner/repository" to subscribe to</summary>
+      <description>Github notifier will subscribe to events on this github repository</description>
+    </key>
+    <key name="show-indicator" type="b">
+      <default>false</default>
+      <summary>Whether to show the gnome bar indicator or not</summary>
+    </key>
+  </schema>
+</schemalist>

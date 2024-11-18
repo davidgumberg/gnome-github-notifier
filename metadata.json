@@ -1,0 +1,9 @@
+{
+  "name": "Git notifier",
+  "description": "Makes it git up",
+  "uuid": "githubnotifier@davidgumberg.com",
+  "shell-version": [
+    "46"
+  ],
+  "settings-schema": "org.gnome.shell.extensions.githubnotifier.davidgumberg"
+}
