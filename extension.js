@@ -128,6 +128,10 @@ export default class GithubNotifierExtension extends Extension {
     }
 
     disable() {
+        if (this._sourceId) {
+            GLib.Source.remove(this._sourceId);
+            this._sourceId = null;
+        }
         this._indicator.destroy();
         this._indicator = null;
         this._settings = null;
