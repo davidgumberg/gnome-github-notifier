@@ -106,6 +106,8 @@ export default class GithubNotifierExtension extends Extension {
         this._pollInterval = DEFAULT_POLL_INTERVAL;
         this.indicator = null;
         this.githubEvents = null;
+        this._lastEventID = '';
+        this._lastIssueEventID = '';
     }
 
     enable() {
@@ -151,6 +153,11 @@ export default class GithubNotifierExtension extends Extension {
         let events = await this.githubEvents.get('/events')
         if (events === null) return;
         for (let event of events) {
+           if (event.id === this._lastEventID) {
+                log('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since we already shewed it. `,
+                    `It was an issue: ${event.event} by ${event.actor.login}`);
+                break;
+            }
             let title, body, url;
 
             console.debug(`[GITHUB_NOTIFIER_EXTENSION] Processing event type: ${event.type}`)
@@ -196,6 +203,10 @@ export default class GithubNotifierExtension extends Extension {
               break;
             }
         }
+
+        if (events.length > 0) {
+            this._lastEventID = events[0].id;
+        }
     }
 
     async pollIssueEvents() {
@@ -203,6 +214,12 @@ export default class GithubNotifierExtension extends Extension {
         let events = await this.githubEvents.get('/issues/events')
         if (events === null) return;
         for (let event of events) {
+            if (event.id === this._lastIssueEventID) {
+                log('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since we already shewed it. `,
+                    `It was an issue: ${event.event} by ${event.actor.login}`);
+                break;
+            }
+
             let title, body, url;
 
             console.debug(`[GITHUB_NOTIFIER_EXTENSION] Processing issue event type: ${event.type}`)
@@ -227,6 +244,10 @@ export default class GithubNotifierExtension extends Extension {
               // Stop processing, since otherwise we'll replace the first notications (most recent) with the last ones (oldest)
               break;
             }
+        }
+
+        if (events.length > 0) {
+            this._lastIssueEventID = events[0].id;
         }
     }
 
