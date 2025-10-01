@@ -4,7 +4,9 @@
   "url": "https://github.com/davidgumberg/gnome-github-notifier",
   "uuid": "githubnotifier@davidgumberg.com",
   "shell-version": [
-    "46"
+    "46",
+    "47",
+    "48"
   ],
   "settings-schema": "org.gnome.shell.extensions.githubnotifier.davidgumberg"
 }
