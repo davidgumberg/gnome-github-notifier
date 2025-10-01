@@ -70,7 +70,7 @@ class GithubEvents{
         let token = this.getToken();
         if (token != '') {
           message.request_headers.append('Authorization', `Bearer ${token}`);
-          log('[GITHUB_NOTIFIER_EXTENSION]', 'Using API Token: ', token)
+          console.debug('[GITHUB_NOTIFIER_EXTENSION]', 'Using API Token: ', token)
         }
 
         message.request_headers.append('X-GitHub-Api-Version', '2022-11-28');
@@ -154,7 +154,7 @@ export default class GithubNotifierExtension extends Extension {
         if (events === null) return;
         for (let event of events) {
            if (event.id === this._lastEventID) {
-                log('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since we already shewed it. `,
+                console.debug('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since we already shewed it. `,
                     `It was an issue: ${event.event} by ${event.actor.login}`);
                 break;
             }
@@ -215,7 +215,7 @@ export default class GithubNotifierExtension extends Extension {
         if (events === null) return;
         for (let event of events) {
             if (event.id === this._lastIssueEventID) {
-                log('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since we already shewed it. `,
+                console.debug('[GITHUB_NOTIFIER_EXTENSION]', `Not adding issue notification with id ${event.id} since we already shewed it. `,
                     `It was an issue: ${event.event} by ${event.actor.login}`);
                 break;
             }
